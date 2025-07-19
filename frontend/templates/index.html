@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Miran | E-Commerce</title>
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="../New logos/FavIcon.jpeg" type="image/x-icon">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons (Boxicons is recommended for consistency) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css" />
+
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="navigation container">
+            <a href="index.html" class="logo">
+                <img src="../New logos/Square.jpeg" width="100px" alt="Miran Logo">
+            </a>
+
+            <div class="menu">
+                <div class="top-nav">
+                    <div class="logo">
+                       <img src="../New logos/Square.jpeg" width="100px" alt="Miran Logo">
+                    </div>
+                    <div class="close">
+                        <i class="bx bx-x"></i>
+                    </div>
+                </div>
+
+                <ul class="nav-list">
+                    <li class="nav-item"><a href="index.html" class="nav-link">Home</a></li>
+                    <li class="nav-item dropdown">
+                        <a href="#products" class="nav-link">Products</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#sale-products">Sale Products</a></li>
+                            <li><a href="#women-products">Women</a></li>
+                            <li><a href="#men-products">Men</a></li>
+                            <li><a href="#kids-products">Kids</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a href="#about" class="nav-link">About</a></li>
+                    <li class="nav-item"><a href="#footer" class="nav-link">Contact</a></li>
+                </ul>
+            </div>
+
+            <div class="nav-right-icons">
+                <a href="cart.html" class="cart-icon">
+                    <i class="bx bx-shopping-bag"></i>
+                    <span id="cart-item-count" class="cart-badge">0</span>
+                </a>
+                <div class="hamburger"><i class="bx bx-menu"></i></div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero/Banner Section -->
+        <section class="hero">
+            <div class="container">
+                <h1>Give your workout a new style!</h1>
+                <p>Experience online bargaining like never before.</p>
+                <a href="#products" class="btn">Explore Now</a>
+            </div>
+        </section>
+
+        <!-- Product Sections -->
+        <section id="sale-products" class="section">
+            <div class="container">
+                <h2 class="section-title">On Sale</h2>
+                <div class="product-center" id="sale-product-center"></div>
+            </div>
+        </section>
+        <section id="women-products" class="section">
+            <div class="container">
+                <h2 class="section-title">Women's Collection</h2>
+                <div class="product-center" id="women-product-center"></div>
+            </div>
+        </section>
+        <section id="men-products" class="section">
+            <div class="container">
+                <h2 class="section-title">Men's Collection</h2>
+                <div class="product-center" id="men-product-center"></div>
+            </div>
+        </section>
+        <section id="kids-products" class="section">
+            <div class="container">
+                <h2 class="section-title">Kids' Collection</h2>
+                <div class="product-center" id="kids-product-center"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer id="footer" class="footer">
+        <div class="container footer-container">
+            <div class="footer-col">
+                <a href="index.html"> <img src="../New logos/Square.jpeg" class="footer-logo" alt="Miran Logo"></a>
+                <p>Redefining the shopping experience with diverse clothing options and personalized interactions.</p>
+            </div>
+    
+            <div class="footer-col">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="#products">Products</a></li>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">FAQs</a></li>
+                    <li><a href="#">Contact Support</a></li>
+                </ul>
+            </div>
+    
+            <div class="footer-col">
+                <h3>Categories</h3>
+                <ul>
+                    <li><a href="#">Women</a></li>
+                    <li><a href="#">Men</a></li>
+                    <li><a href="#">Kids</a></li>
+                    <li><a href="#">Sale</a></li>
+                </ul>
+            </div>
+    
+            <div class="footer-col">
+                <h3>Follow Us</h3>
+                <div class="social-links">
+                    <a href="#"><i class='bx bxl-facebook'></i></a>
+                    <a href="#"><i class='bx bxl-instagram'></i></a>
+                    <a href="#"><i class='bx bxl-twitter'></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p class="copyright">Copyright &copy; 2025 Miran. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Make an Offer Modal -->
+    <div id="offer-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal-btn">&times;</span>
+            <h2 id="modal-product-name">Make an Offer</h2>
+            <p class="modal-price-info">Current Price: <strong id="modal-current-price"></strong></p>
+            <div class="form-group">
+                <label for="offer-price">Your Offer (₹):</label>
+                <input type="number" id="offer-price" placeholder="e.g., 850">
+            </div>
+            <button id="submit-offer-btn" class="btn">Submit Offer</button>
+        </div>
+    </div>
+
+
+    <!-- Scripts -->
+    <script src="../js/main.js"></script>
+</body>
+</html>

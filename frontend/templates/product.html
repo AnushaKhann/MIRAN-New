@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details | Miran</title>
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="../New logos/FavIcon.jpeg" type="image/x-icon">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css" />
+
+    <!-- Flickity Carousel CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/flickity@2/dist/flickity.min.css">
+
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="navigation container">
+            <a href="index.html" class="logo">
+                <img src="../New logos/Square.jpeg" width="100px" alt="Miran Logo">
+            </a>
+
+            <div class="menu">
+                <div class="top-nav">
+                    <div class="logo">
+                       <img src="../New logos/Square.jpeg" width="100px" alt="Miran Logo">
+                    </div>
+                    <div class="close">
+                        <i class="bx bx-x"></i>
+                    </div>
+                </div>
+
+                <ul class="nav-list">
+                    <li class="nav-item"><a href="index.html" class="nav-link">Home</a></li>
+                    <li class="nav-item dropdown">
+                        <a href="index.html#products" class="nav-link">Products</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="index.html#sale-products">Sale Products</a></li>
+                            <li><a href="index.html#women-products">Women</a></li>
+                            <li><a href="index.html#men-products">Men</a></li>
+                            <li><a href="index.html#kids-products">Kids</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a href="index.html#about" class="nav-link">About</a></li>
+                    <li class="nav-item"><a href="index.html#footer" class="nav-link">Contact</a></li>
+                </ul>
+            </div>
+
+            <div class="nav-right-icons">
+                <a href="cart.html" class="cart-icon">
+                    <i class="bx bx-shopping-bag"></i>
+                    <span id="cart-item-count" class="cart-badge">0</span>
+                </a>
+                <div class="hamburger"><i class="bx bx-menu"></i></div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Product Details Content -->
+    <main>
+        <section class="section product-detail-section">
+            <div class="container" id="product-detail-container">
+                <!-- Product details will be dynamically injected here -->
+                <p class="loading-text">Loading product details...</p>
+            </div>
+        </section>
+
+        <!-- Related Products -->
+        <section class="section">
+            <div class="container">
+                <h2 class="section-title">Related Products</h2>
+                <div class="product-center" id="related-products-center">
+                    <!-- Related products will be injected here -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer id="footer" class="footer">
+        <!-- Your full footer code -->
+    </footer>
+
+    <!-- Make an Offer Modal -->
+    <div id="offer-modal" class="modal">
+        <!-- Your full modal code -->
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/flickity@2/dist/flickity.pkgd.min.js"></script>
+    <script src="../js/products.js"></script>
+    <script src="../js/main.js"></script>
+
+    <!-- Page-specific script for product detail logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const productDetailContainer = document.getElementById('product-detail-container');
+            const relatedProductsContainer = document.getElementById('related-products-center');
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = parseInt(urlParams.get('id'));
+
+            if (!productId || typeof products === 'undefined') {
+                productDetailContainer.innerHTML = '<p class="error-text">Product not found.</p>';
+                return;
+            }
+
+            const product = products.find(p => p.id === productId);
+
+            if (!product) {
+                productDetailContainer.innerHTML = '<p class="error-text">Sorry, we could not find that product.</p>';
+                return;
+            }
+
+            const displayPrice = product.salePrice 
+                ? `<span class="original-price">₹${product.price.toFixed(2)}</span> - <span class="discount-badge">${product.discount} OFF</span> ₹${product.salePrice.toFixed(2)}` 
+                : `₹${product.price.toFixed(2)}`;
+
+            const imageCells = product.images.map(imgSrc => `<div class="carousel-cell"><img src="${imgSrc}" alt="${product.name}"></div>`).join('');
+
+            const productDetailHTML = `
+                <div class="product-detail-layout">
+                    <div class="product-images">
+                        <div class="main-carousel">
+                            ${imageCells}
+                        </div>
+                    </div>
+                    <div class="product-info">
+                        <span class="category-tag">${product.category}</span>
+                        <h1>${product.name}</h1>
+                        <div class="price">${displayPrice}</div>
+                        <form>
+                            <div>
+                                <select>
+                                    <option selected disabled>Select Size</option>
+                                    <option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option>
+                                </select>
+                                <span><i class='bx bx-chevron-down'></i></span>
+                            </div>
+                        </form>
+                        <div class="description">
+                            <h3>Product Details</h3>
+                            <p>${product.description}</p>
+                        </div>
+                        <div class="product-actions">
+                            <button class="btn" onclick="addProductToCart(${product.id})">Add to Cart</button>
+                            <button class="btn btn-offer" onclick="openOfferModal(${product.id})">Make an Offer</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            productDetailContainer.innerHTML = productDetailHTML;
+
+            const mainCarousel = document.querySelector('.main-carousel');
+            if (mainCarousel) new Flickity(mainCarousel, { wrapAround: true, pageDots: true });
+
+            const relatedProducts = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
+            
+            let relatedProductsHTML = '';
+            relatedProducts.forEach(relatedProd => {
+                const relatedPrice = relatedProd.salePrice 
+                    ? `<span class="original-price">₹${relatedProd.price.toFixed(2)}</span> ₹${relatedProd.salePrice.toFixed(2)}`
+                    : `₹${relatedProd.price.toFixed(2)}`;
+
+                relatedProductsHTML += `
+                    <div class="product-item">
+                        <div class="product-header">
+                            <a href="product.html?id=${relatedProd.id}">
+                               <img src="${relatedProd.images[0]}" alt="${relatedProd.name}">
+                            </a>
+                        </div>
+                        <div class="product-footer">
+                            <h4>${relatedProd.name}</h4>
+                            <div class="price">${relatedPrice}</div>
+                            <button class="btn" onclick="addProductToCart(${relatedProd.id})">Add to Cart</button>
+                        </div>
+                    </div>
+                `;
+            });
+            relatedProductsContainer.innerHTML = relatedProductsHTML;
+        });
+    </script>
+</body>
+</html>
