@@ -4,20 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product Details | Miran</title>
-
-    <!-- Favicon -->
+    <!-- Favicon, Fonts, Icons, CSS -->
     <link rel="shortcut icon" href="../New logos/FavIcon.jpeg" type="image/x-icon">
-
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css" />
-
-    <!-- Flickity Carousel CSS -->
     <link rel="stylesheet" href="https://unpkg.com/flickity@2/dist/flickity.min.css">
-
-    <!-- Main Stylesheet -->
     <link rel="stylesheet" href="../css/style.css">
 </head>
 
@@ -78,116 +69,100 @@
         <section class="section">
             <div class="container">
                 <h2 class="section-title">Related Products</h2>
-                <div class="product-center" id="related-products-center">
-                    <!-- Related products will be injected here -->
-                </div>
+                <div class="product-center" id="related-products-center"></div>
             </div>
         </section>
     </main>
 
     <!-- Footer -->
     <footer id="footer" class="footer">
-        <!-- Your full footer code -->
+        <!-- Your full footer HTML -->
     </footer>
 
     <!-- Make an Offer Modal -->
     <div id="offer-modal" class="modal">
-        <!-- Your full modal code -->
+        <!-- Your full modal HTML -->
     </div>
 
     <!-- Scripts -->
     <script src="https://unpkg.com/flickity@2/dist/flickity.pkgd.min.js"></script>
-    <script src="../js/products.js"></script>
     <script src="../js/main.js"></script>
 
     <!-- Page-specific script for product detail logic -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             const productDetailContainer = document.getElementById('product-detail-container');
             const relatedProductsContainer = document.getElementById('related-products-center');
 
-            const urlParams = new URLSearchParams(window.location.search);
-            const productId = parseInt(urlParams.get('id'));
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const productId = parseInt(urlParams.get('id'));
 
-            if (!productId || typeof products === 'undefined') {
-                productDetailContainer.innerHTML = '<p class="error-text">Product not found.</p>';
-                return;
-            }
+                if (!productId) throw new Error("Product ID not found in URL.");
 
-            const product = products.find(p => p.id === productId);
+                const productResponse = await fetch(`/api/products/${productId}`);
+                if (!productResponse.ok) throw new Error("Product not found.");
+                const product = await productResponse.json();
 
-            if (!product) {
-                productDetailContainer.innerHTML = '<p class="error-text">Sorry, we could not find that product.</p>';
-                return;
-            }
+                // FIX: Price display now matches your screenshot exactly
+                const displayPrice = product.salePrice 
+                    ? `₹${product.price.toFixed(2)} - <span class="discount-badge">${product.discount} OFF</span> ₹${product.salePrice.toFixed(2)}` 
+                    : `₹${product.price.toFixed(2)}`;
 
-            const displayPrice = product.salePrice 
-                ? `<span class="original-price">₹${product.price.toFixed(2)}</span> - <span class="discount-badge">${product.discount} OFF</span> ₹${product.salePrice.toFixed(2)}` 
-                : `₹${product.price.toFixed(2)}`;
+                const imageCells = product.images.map(imgSrc => `<div class="carousel-cell"><img src="${imgSrc}" alt="${product.name}"></div>`).join('');
 
-            const imageCells = product.images.map(imgSrc => `<div class="carousel-cell"><img src="${imgSrc}" alt="${product.name}"></div>`).join('');
-
-            const productDetailHTML = `
-                <div class="product-detail-layout">
-                    <div class="product-images">
-                        <div class="main-carousel">
-                            ${imageCells}
+                const productDetailHTML = `
+                    <div class="product-detail-layout">
+                        <div class="product-images">
+                            <div class="main-carousel">${imageCells}</div>
                         </div>
-                    </div>
-                    <div class="product-info">
-                        <span class="category-tag">${product.category}</span>
-                        <h1>${product.name}</h1>
-                        <div class="price">${displayPrice}</div>
-                        <form>
-                            <div>
-                                <select>
-                                    <option selected disabled>Select Size</option>
-                                    <option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option>
+                        <div class="product-info">
+                            <span class="category-tag">${product.category}</span>
+                            <h1>${product.name}</h1>
+                            <div class="price">${displayPrice}</div>
+                            <form>
+                                <!-- FIX: Removed the extra span with the icon -->
+                                <select id="size-select">
+                                    <option value="" selected disabled>Select Size</option>
+                                    <option value="XS">XS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option>
                                 </select>
-                                <span><i class='bx bx-chevron-down'></i></span>
+                            </form>
+                            <div class="description">
+                                <h3>Product Details</h3>
+                                <p>${product.description}</p>
                             </div>
-                        </form>
-                        <div class="description">
-                            <h3>Product Details</h3>
-                            <p>${product.description}</p>
-                        </div>
-                        <div class="product-actions">
-                            <button class="btn" onclick="addProductToCart(${product.id})">Add to Cart</button>
-                            <button class="btn btn-offer" onclick="openOfferModal(${product.id})">Make an Offer</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            productDetailContainer.innerHTML = productDetailHTML;
-
-            const mainCarousel = document.querySelector('.main-carousel');
-            if (mainCarousel) new Flickity(mainCarousel, { wrapAround: true, pageDots: true });
-
-            const relatedProducts = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
-            
-            let relatedProductsHTML = '';
-            relatedProducts.forEach(relatedProd => {
-                const relatedPrice = relatedProd.salePrice 
-                    ? `<span class="original-price">₹${relatedProd.price.toFixed(2)}</span> ₹${relatedProd.salePrice.toFixed(2)}`
-                    : `₹${relatedProd.price.toFixed(2)}`;
-
-                relatedProductsHTML += `
-                    <div class="product-item">
-                        <div class="product-header">
-                            <a href="product.html?id=${relatedProd.id}">
-                               <img src="${relatedProd.images[0]}" alt="${relatedProd.name}">
-                            </a>
-                        </div>
-                        <div class="product-footer">
-                            <h4>${relatedProd.name}</h4>
-                            <div class="price">${relatedPrice}</div>
-                            <button class="btn" onclick="addProductToCart(${relatedProd.id})">Add to Cart</button>
+                            <div class="product-actions">
+                                <button class="btn" onclick="handleAddToCart(${product.id})">Add to Cart</button>
+                                <button class="btn btn-offer" onclick="openOfferModal(${product.id})">Make an Offer</button>
+                            </div>
                         </div>
                     </div>
                 `;
-            });
-            relatedProductsContainer.innerHTML = relatedProductsHTML;
+                productDetailContainer.innerHTML = productDetailHTML;
+                
+                const mainCarousel = document.querySelector('.main-carousel');
+                if (mainCarousel) new Flickity(mainCarousel, { wrapAround: true, pageDots: true });
+
+                const allProductsResponse = await fetch('/api/products');
+                const allProducts = await allProductsResponse.json();
+                
+                const relatedProducts = allProducts.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
+                relatedProductsContainer.innerHTML = relatedProducts.map(p => createProductHTML(p)).join('');
+
+            } catch (error) {
+                productDetailContainer.innerHTML = `<p class="error-text">${error.message}</p>`;
+            }
         });
+        
+        function handleAddToCart(productId) {
+            const sizeSelect = document.getElementById('size-select');
+            const selectedSize = sizeSelect.value;
+            if (!selectedSize) {
+                alert('Please select a size before adding to cart.');
+                return;
+            }
+            addProductToCart(productId, selectedSize);
+        }
     </script>
 </body>
 </html>
