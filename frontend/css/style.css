@@ -185,3 +185,98 @@ img { max-width: 100%; display: block; }
     .close { font-size: 3rem; cursor: pointer; }
     .hamburger { display: block; }
 }
+
+
+/* --- Admin Dashboard --- */
+.seller-selector {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.seller-selector label {
+    font-weight: 500;
+    margin-right: 1rem;
+}
+
+.seller-selector select {
+    padding: 0.8rem 1.2rem;
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+    font-size: 1.6rem;
+}
+
+.offer-item {
+    background-color: var(--surface-color);
+    border-radius: 8px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    display: grid;
+    grid-template-columns: 100px 1fr 1fr 1fr;
+    gap: 2rem;
+    align-items: center;
+}
+
+.offer-item-img {
+    width: 100px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.offer-details h4 {
+    font-size: 1.8rem;
+    color: var(--heading-color);
+}
+
+.offer-pricing {
+    font-size: 1.6rem;
+}
+
+.offer-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.offer-actions .btn {
+    padding: 0.8rem 1.5rem;
+}
+
+.btn-accept {
+    background-color: #28a745;
+}
+.btn-accept:hover {
+    background-color: #218838;
+}
+
+.btn-reject {
+    background-color: #dc3545;
+}
+.btn-reject:hover {
+    background-color: #c82333;
+}
+
+/* Offer statuses */
+.offer-status {
+    text-transform: capitalize;
+}
+
+.offer-item.status-accepted {
+    border-left: 5px solid #28a745; /* Green */
+}
+
+.offer-item.status-rejected {
+    border-left: 5px solid #dc3545; /* Red */
+    opacity: 0.7;
+}
+
+.offer-item.status-countered {
+    border-left: 5px solid #ffc107; /* Yellow */
+}
+
+.offer-actions button:disabled {
+    background-color: #ccc;
+    border-color: #ccc;
+    cursor: not-allowed;
+}

@@ -18,7 +18,6 @@ function updateCartIcon() {
     }
 }
 
-// This function is now only called from the product detail page
 function addProductToCart(productId, size) {
     const cart = getCart();
     const existingItem = cart.find(item => item.id === productId && item.size === size);
@@ -35,13 +34,11 @@ function addProductToCart(productId, size) {
 }
 
 // --- GLOBAL PRODUCT CARD RENDERER ---
-// This function is now global, so any page can use it.
 function createProductHTML(product) {
     const displayPrice = product.salePrice 
         ? `<span class="original-price">₹${product.price.toFixed(2)}</span> - <span class="discount-badge">${product.discount} OFF</span> ₹${product.salePrice.toFixed(2)}` 
         : `₹${product.price.toFixed(2)}`;
 
-    // FIX: Simplified the homepage product card to only have a "View Details" button.
     return `
         <div class="product-item">
             <div class="product-header">
@@ -119,7 +116,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (modalProductName) modalProductName.textContent = product.name;
                     if (modalCurrentPrice) modalCurrentPrice.textContent = `₹${(product.salePrice || product.price).toFixed(2)}`;
-                    if (submitOfferBtn) submitOfferBtn.dataset.productId = product.id;
+                    if (submitOfferBtn) {
+                        submitOfferBtn.dataset.productId = product.id;
+                        // FIX: Store the sellerId on the button as well
+                        submitOfferBtn.dataset.sellerId = product.sellerId; 
+                    }
                     
                     offerModal.classList.add('show');
                 }
@@ -145,6 +146,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (submitOfferBtn) {
         submitOfferBtn.addEventListener('click', () => {
             const productId = submitOfferBtn.dataset.productId;
+            // FIX: Get the sellerId from the button's dataset
+            const sellerId = submitOfferBtn.dataset.sellerId; 
             const offerPriceInput = document.getElementById('offer-price');
             const offerPrice = parseFloat(offerPriceInput.value);
 
@@ -153,14 +156,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const offerData = { productId, offerPrice };
+            // FIX: Include the sellerId in the data sent to the server
+            const offerData = { productId, offerPrice, sellerId };
 
             fetch('/api/offers', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(offerData),
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    // If the server sends an error, show it
+                    throw new Error('Server responded with an error.');
+                }
+                return response.json();
+            })
             .then(data => {
                 console.log('Success:', data);
                 alert('Your offer has been submitted successfully!');

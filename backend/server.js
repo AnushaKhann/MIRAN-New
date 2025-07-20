@@ -1,4 +1,3 @@
-// --- Import Required Packages ---
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -6,9 +5,7 @@ const admin = require('firebase-admin');
 
 // --- Firebase Initialization ---
 const serviceAccount = require('./serviceAccountKey.json');
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
+admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
 const db = admin.firestore();
 
 // --- Initial Setup ---
@@ -20,43 +17,44 @@ app.use(cors());
 app.use(express.json()); 
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
-
-// --- API Routes (Now using Firestore) ---
+// --- API Routes ---
 
 // Get all products
 app.get('/api/products', async (req, res) => {
     try {
-        const productsCollection = db.collection('products');
-        const snapshot = await productsCollection.get();
-        if (snapshot.empty) {
-            return res.status(404).json({ message: 'No products found' });
+        const sellersSnapshot = await db.collection('sellers').get();
+        const allProducts = [];
+        for (const sellerDoc of sellersSnapshot.docs) {
+            const productsSnapshot = await sellerDoc.ref.collection('products').get();
+            productsSnapshot.forEach(productDoc => {
+                allProducts.push({ id: productDoc.id, ...productDoc.data() });
+            });
         }
-        let products = [];
-        snapshot.forEach(doc => {
-            // Firestore's doc.id is a string, so we ensure our data matches that
-            products.push({ id: doc.id, ...doc.data() });
-        });
-        res.status(200).json(products);
+        res.status(200).json(allProducts);
     } catch (error) {
-        console.error("Error fetching products:", error);
         res.status(500).send('Error getting products');
     }
 });
 
-// Get a single product by ID
 app.get('/api/products/:id', async (req, res) => {
     try {
         const productId = req.params.id;
-        const docRef = db.collection('products').doc(String(productId));
-        const doc = await docRef.get();
-
-        if (!doc.exists) {
-            res.status(404).json({ message: 'Product not found' });
+        const sellersSnapshot = await db.collection('sellers').get();
+        let foundProduct = null;
+        for (const sellerDoc of sellersSnapshot.docs) {
+            const productRef = sellerDoc.ref.collection('products').doc(String(productId));
+            const productDoc = await productRef.get();
+            if (productDoc.exists) {
+                foundProduct = { id: productDoc.id, ...productDoc.data() };
+                break; 
+            }
+        }
+        if (foundProduct) {
+            res.status(200).json(foundProduct);
         } else {
-            res.status(200).json({ id: doc.id, ...doc.data() });
+            res.status(404).json({ message: 'Product not found' });
         }
     } catch (error) {
-        console.error("Error fetching single product:", error);
         res.status(500).send('Error getting product');
     }
 });
@@ -64,52 +62,89 @@ app.get('/api/products/:id', async (req, res) => {
 // Submit a new offer
 app.post('/api/offers', async (req, res) => {
     try {
-        const { productId, offerPrice } = req.body;
+        const { productId, offerPrice, sellerId } = req.body;
+        if (!productId || !offerPrice || !sellerId) {
+            return res.status(400).json({ message: 'Product ID, offer price, and seller ID are required.' });
+        }
+        const newOffer = {
+            productId: String(productId),
+            offerPrice: Number(offerPrice),
+            sellerId: sellerId,
+            status: 'pending',
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        };
+        const docRef = await db.collection('offers').add(newOffer);
+        res.status(201).json({ message: 'Offer submitted successfully!', offerId: docRef.id });
+    } catch (error) {
+        res.status(500).send('Error submitting offer');
+    }
+});
 
-        // Basic validation
-        if (!productId || !offerPrice) {
-            return res.status(400).json({ message: 'Product ID and offer price are required.' });
+app.get('/api/sellers/:sellerId/offers', async (req, res) => {
+    try {
+        const { sellerId } = req.params;
+        const offersRef = db.collection('offers');
+        const snapshot = await offersRef.where('sellerId', '==', sellerId).orderBy('createdAt', 'desc').get();
+        
+        if (snapshot.empty) {
+            return res.status(200).json([]);
         }
 
-        const newOffer = {
-            productId: productId,
-            offerPrice: Number(offerPrice),
-            status: 'pending', // Initial status of every new offer
-            createdAt: admin.firestore.FieldValue.serverTimestamp() // The current time
-        };
+        const offers = [];
+        for (const offerDoc of snapshot.docs) {
+            const offerData = offerDoc.data();
+            const productRef = db.collection('sellers').doc(sellerId).collection('products').doc(offerData.productId);
+            const productDoc = await productRef.get();
+            
+            if(productDoc.exists) {
+                offers.push({
+                    offerId: offerDoc.id,
+                    ...offerData,
+                    product: productDoc.data()
+                });
+            }
+        }
+        res.status(200).json(offers);
+    } catch (error) {
+        res.status(500).send('Error fetching offers');
+    }
+});
 
-        // Add the new offer to the 'offers' collection
-        const docRef = await db.collection('offers').add(newOffer);
+// ** NEW: Update an offer's status **
+app.patch('/api/offers/:offerId', async (req, res) => {
+    try {
+        const { offerId } = req.params;
+        const { status, counterPrice } = req.body; // Expect 'status' and optional 'counterPrice'
 
-        console.log('New offer saved with ID:', docRef.id);
-        res.status(201).json({ message: 'Offer submitted successfully!', offerId: docRef.id });
+        if (!status) {
+            return res.status(400).json({ message: 'A new status is required.' });
+        }
+
+        const offerRef = db.collection('offers').doc(offerId);
+        const updateData = { status: status };
+
+        // If it's a counter-offer, add the counter price to the update
+        if (status === 'countered' && counterPrice) {
+            updateData.counterPrice = Number(counterPrice);
+        }
+
+        await offerRef.update(updateData);
+
+        res.status(200).json({ message: `Offer ${offerId} has been updated to ${status}.` });
 
     } catch (error) {
-        console.error("Error submitting offer:", error);
-        res.status(500).send('Error submitting offer');
+        console.error("Error updating offer:", error);
+        res.status(500).send('Error updating offer');
     }
 });
 
 
 // --- Page Serving Routes ---
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'frontend', 'templates', 'index.html'));
-});
-
-// ADDED: This explicitly handles requests for the index.html file
-app.get('/index.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'frontend', 'templates', 'index.html'));
-});
-
-// This handles requests for the product.html file
-app.get('/product.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'frontend', 'templates', 'product.html'));
-});
-
-// This handles requests for the cart.html file
-app.get('/cart.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'frontend', 'templates', 'cart.html'));
-});
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, '..', 'frontend', 'templates', 'index.html')));
+app.get('/index.html', (req, res) => res.sendFile(path.join(__dirname, '..', 'frontend', 'templates', 'index.html')));
+app.get('/product.html', (req, res) => res.sendFile(path.join(__dirname, '..', 'frontend', 'templates', 'product.html')));
+app.get('/cart.html', (req, res) => res.sendFile(path.join(__dirname, '..', 'frontend', 'templates', 'cart.html')));
+app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, '..', 'frontend', 'templates', 'admin.html')));
 
 
 // --- Start The Server ---

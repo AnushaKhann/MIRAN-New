@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Dashboard | Miran</title>
+    <link rel="shortcut icon" href="../New logos/FavIcon.jpeg" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css" />
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="navigation container">
+            <a href="index.html" class="logo">
+                <img src="../New logos/Square.jpeg" width="100px" alt="Miran Logo">
+            </a>
+            <div class="menu">
+                <ul class="nav-list">
+                    <li class="nav-item"><a href="index.html" class="nav-link">View Site</a></li>
+                    <li class="nav-item"><a href="admin.html" class="nav-link">Dashboard</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Admin Content -->
+    <main>
+        <section class="section">
+            <div class="container" id="admin-container">
+                <h2 class="section-title">Incoming Customer Offers</h2>
+                <div class="seller-selector">
+                    <label for="seller-select">Select Seller:</label>
+                    <select id="seller-select">
+                        <option value="classic-threads">Classic Threads</option>
+                        <option value="modern-fits">Modern Fits</option>
+                    </select>
+                </div>
+                <div id="offers-list-container">
+                    <!-- Offers will be dynamically injected here -->
+                    <p class="loading-text">Loading offers...</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer id="footer" class="footer">
+        <!-- Your footer code here -->
+    </footer>
+
+    <!-- Scripts -->
+    <script src="../js/admin.js"></script>
+</body>
+</html>
