@@ -21,15 +21,19 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 
-// --- API Routes (For fetching data) ---
+// --- API Routes (Now using Firestore) ---
+
+// Get all products
 app.get('/api/products', async (req, res) => {
     try {
-        const snapshot = await db.collection('products').get();
+        const productsCollection = db.collection('products');
+        const snapshot = await productsCollection.get();
         if (snapshot.empty) {
             return res.status(404).json({ message: 'No products found' });
         }
         let products = [];
         snapshot.forEach(doc => {
+            // Firestore's doc.id is a string, so we ensure our data matches that
             products.push({ id: doc.id, ...doc.data() });
         });
         res.status(200).json(products);
@@ -39,6 +43,7 @@ app.get('/api/products', async (req, res) => {
     }
 });
 
+// Get a single product by ID
 app.get('/api/products/:id', async (req, res) => {
     try {
         const productId = req.params.id;
@@ -56,10 +61,37 @@ app.get('/api/products/:id', async (req, res) => {
     }
 });
 
+// Submit a new offer
+app.post('/api/offers', async (req, res) => {
+    try {
+        const { productId, offerPrice } = req.body;
 
-// --- Page Serving Routes (For serving HTML) ---
+        // Basic validation
+        if (!productId || !offerPrice) {
+            return res.status(400).json({ message: 'Product ID and offer price are required.' });
+        }
 
-// This handles the root URL (e.g., http://localhost:5001)
+        const newOffer = {
+            productId: productId,
+            offerPrice: Number(offerPrice),
+            status: 'pending', // Initial status of every new offer
+            createdAt: admin.firestore.FieldValue.serverTimestamp() // The current time
+        };
+
+        // Add the new offer to the 'offers' collection
+        const docRef = await db.collection('offers').add(newOffer);
+
+        console.log('New offer saved with ID:', docRef.id);
+        res.status(201).json({ message: 'Offer submitted successfully!', offerId: docRef.id });
+
+    } catch (error) {
+        console.error("Error submitting offer:", error);
+        res.status(500).send('Error submitting offer');
+    }
+});
+
+
+// --- Page Serving Routes ---
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'frontend', 'templates', 'index.html'));
 });

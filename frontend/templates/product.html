@@ -59,8 +59,8 @@
     <!-- Main Product Details Content -->
     <main>
         <section class="section product-detail-section">
-            <div class="container" id="product-detail-container">
-                <!-- Product details will be dynamically injected here -->
+            <div class="container" id="product-detail-container"> 
+               <!-- Product details will be dynamically injected here -->
                 <p class="loading-text">Loading product details...</p>
             </div>
         </section>
@@ -81,7 +81,16 @@
 
     <!-- Make an Offer Modal -->
     <div id="offer-modal" class="modal">
-        <!-- Your full modal HTML -->
+        <div class="modal-content">
+            <span class="close-modal-btn">&times;</span>
+            <h2 id="modal-product-name">Make an Offer</h2>
+            <p class="modal-price-info">Current Price: <strong id="modal-current-price"></strong></p>
+            <div class="form-group">
+                <label for="offer-price">Your Offer (₹):</label>
+                <input type="number" id="offer-price" placeholder="e.g., 850">
+            </div>
+            <button id="submit-offer-btn" class="btn">Submit Offer</button>
+        </div>
     </div>
 
     <!-- Scripts -->
@@ -104,9 +113,8 @@
                 if (!productResponse.ok) throw new Error("Product not found.");
                 const product = await productResponse.json();
 
-                // FIX: Price display now matches your screenshot exactly
                 const displayPrice = product.salePrice 
-                    ? `₹${product.price.toFixed(2)} - <span class="discount-badge">${product.discount} OFF</span> ₹${product.salePrice.toFixed(2)}` 
+                    ? `<span class="original-price">₹${product.price.toFixed(2)}</span> - <span class="discount-badge">${product.discount} OFF</span> ₹${product.salePrice.toFixed(2)}` 
                     : `₹${product.price.toFixed(2)}`;
 
                 const imageCells = product.images.map(imgSrc => `<div class="carousel-cell"><img src="${imgSrc}" alt="${product.name}"></div>`).join('');
@@ -121,7 +129,6 @@
                             <h1>${product.name}</h1>
                             <div class="price">${displayPrice}</div>
                             <form>
-                                <!-- FIX: Removed the extra span with the icon -->
                                 <select id="size-select">
                                     <option value="" selected disabled>Select Size</option>
                                     <option value="XS">XS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option>

@@ -18,6 +18,7 @@ function updateCartIcon() {
     }
 }
 
+// This function is now only called from the product detail page
 function addProductToCart(productId, size) {
     const cart = getCart();
     const existingItem = cart.find(item => item.id === productId && item.size === size);
@@ -40,6 +41,7 @@ function createProductHTML(product) {
         ? `<span class="original-price">₹${product.price.toFixed(2)}</span> - <span class="discount-badge">${product.discount} OFF</span> ₹${product.salePrice.toFixed(2)}` 
         : `₹${product.price.toFixed(2)}`;
 
+    // FIX: Simplified the homepage product card to only have a "View Details" button.
     return `
         <div class="product-item">
             <div class="product-header">
@@ -51,7 +53,6 @@ function createProductHTML(product) {
                 <h4>${product.name}</h4>
                 <div class="price">${displayPrice}</div>
                 <div class="product-actions">
-                    <!-- The button on the homepage now links directly to the product page -->
                     <a href="product.html?id=${product.id}" class="btn">View Details</a>
                 </div>
             </div>
@@ -68,10 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const hamburger = document.querySelector('.hamburger');
     const closeMenuBtn = document.querySelector('.menu .close');
     const menu = document.querySelector('.menu');
-    const offerModal = document.getElementById('offer-modal');
-    const closeModalBtn = document.querySelector('.close-modal-btn');
-    const submitOfferBtn = document.getElementById('submit-offer-btn');
-
+    
     updateCartIcon();
 
     if (hamburger && menu && closeMenuBtn) {
@@ -107,14 +105,22 @@ document.addEventListener('DOMContentLoaded', () => {
         nav.classList.toggle('hide', scrollPosition > footerTop + navHeight);
     });
 
+    // --- MODAL LOGIC ---
+    const offerModal = document.getElementById('offer-modal');
+    
     window.openOfferModal = (productId) => {
         fetch(`/api/products/${productId}`)
             .then(res => res.json())
             .then(product => {
                 if (product && offerModal) {
-                    document.getElementById('modal-product-name').textContent = product.name;
-                    document.getElementById('modal-current-price').textContent = `₹${(product.salePrice || product.price).toFixed(2)}`;
-                    submitOfferBtn.dataset.productId = productId;
+                    const modalProductName = document.getElementById('modal-product-name');
+                    const modalCurrentPrice = document.getElementById('modal-current-price');
+                    const submitOfferBtn = document.getElementById('submit-offer-btn');
+
+                    if (modalProductName) modalProductName.textContent = product.name;
+                    if (modalCurrentPrice) modalCurrentPrice.textContent = `₹${(product.salePrice || product.price).toFixed(2)}`;
+                    if (submitOfferBtn) submitOfferBtn.dataset.productId = product.id;
+                    
                     offerModal.classList.add('show');
                 }
             });
@@ -123,26 +129,48 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeOfferModal = () => {
         if (offerModal) {
             offerModal.classList.remove('show');
-            document.getElementById('offer-price').value = '';
+            const offerPriceInput = document.getElementById('offer-price');
+            if (offerPriceInput) offerPriceInput.value = '';
         }
     };
+
+    const closeModalBtn = document.querySelector('.close-modal-btn');
+    const submitOfferBtn = document.getElementById('submit-offer-btn');
 
     if (closeModalBtn) closeModalBtn.addEventListener('click', closeOfferModal);
     if (offerModal) offerModal.addEventListener('click', (e) => {
         if (e.target === offerModal) closeOfferModal();
     });
-    if (submitOfferBtn) submitOfferBtn.addEventListener('click', () => {
-        const productId = submitOfferBtn.dataset.productId;
-        const offerPrice = parseFloat(document.getElementById('offer-price').value);
 
-        if (!offerPrice || offerPrice <= 0) {
-            alert('Please enter a valid offer price.');
-            return;
-        }
-        
-        console.log(`Offer Submitted: Product ID ${productId}, Offer Price: ₹${offerPrice}`);
-        alert(`Your offer of ₹${offerPrice} has been submitted!`);
-        
-        closeOfferModal();
-    });
+    if (submitOfferBtn) {
+        submitOfferBtn.addEventListener('click', () => {
+            const productId = submitOfferBtn.dataset.productId;
+            const offerPriceInput = document.getElementById('offer-price');
+            const offerPrice = parseFloat(offerPriceInput.value);
+
+            if (!offerPrice || offerPrice <= 0) {
+                alert('Please enter a valid offer price.');
+                return;
+            }
+
+            const offerData = { productId, offerPrice };
+
+            fetch('/api/offers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(offerData),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                alert('Your offer has been submitted successfully!');
+                closeOfferModal();
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('There was an error submitting your offer. Please try again.');
+                closeOfferModal();
+            });
+        });
+    }
 });
